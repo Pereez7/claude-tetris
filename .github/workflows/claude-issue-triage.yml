@@ -1,0 +1,110 @@
+name: Claude Issue Triage
+
+on:
+  issues:
+    types: [opened, edited]
+
+concurrency:
+  group: issue-triage-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  triage:
+    if: |
+      github.event.issue.pull_request == null &&
+      github.event.issue.user.type != 'Bot' &&
+      !contains(github.event.issue.body, '@claude')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Ensure custom labels exist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create "area:game-logic" --color "1d76db" --description "Lógica de juego: colisiones, rotación, spawn, line clear" --force
+          gh label create "area:render" --color "5319e7" --description "Dibujado en canvas, ghost piece, preview" --force
+          gh label create "area:ui" --color "0e8a16" --description "HUD, overlay, estilos, layout" --force
+          gh label create "area:input" --color "fbca04" --description "Teclado y controles" --force
+          gh label create "priority:high" --color "b60205" --description "Bloquea el juego o corrompe estado" --force
+          gh label create "priority:medium" --color "d93f0b" --description "Impacto notable, no bloqueante" --force
+          gh label create "priority:low" --color "0052cc" --description "Cosmético o mejora menor" --force
+          gh label create "needs-info" --color "cccccc" --description "Falta información para diagnosticar" --force
+
+      - name: Run Claude Code Triage
+        id: claude-triage
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: '--allowed-tools "Bash(gh issue view:*),Bash(gh issue edit:*),Bash(gh issue comment:*),Bash(gh api:*),Bash(gh label list:*),Read,Grep,Glob"'
+          prompt: |
+            Estás haciendo triage automático del Issue #${{ github.event.issue.number }} en el repositorio ${{ github.repository }}.
+
+            Este repo es un Tetris clásico en JavaScript vanilla (HTML5 Canvas + CSS, sin dependencias, sin build). Lee primero CLAUDE.md para entender la arquitectura completa. Toda la lógica del juego vive en game.js (~300 líneas, un solo script sin módulos): tablero (board), piezas (PIECES, rotateCW), colisiones (collide), wall kicks (tryRotate, offsets [0, -1, 1, -2, 2]), loop de juego (loop, dropAccum, dropInterval), limpieza de líneas (clearLines), scoring (LINE_SCORES), nivel (level), ghost piece (ghostY). index.html define el DOM y el canvas #board (300×600, 10×20 celdas de BLOCK=30px). style.css es el tema visual.
+
+            Tu tarea tiene dos partes. NO modifiques código, NO abras Pull Requests: tu único output son labels aplicados y un comentario de diagnóstico.
+
+            ## 1. Leer el Issue
+
+            Ejecuta `gh issue view ${{ github.event.issue.number }} --json title,body,labels,comments` para obtener el contenido completo y los labels actuales.
+
+            ## 2. Investigar el código relevante
+
+            Según de qué trate el Issue, lee las secciones pertinentes de game.js, index.html y style.css (usa Read/Grep/Glob) para identificar con precisión qué función, constante o bloque de código está involucrado.
+
+            ## 3. Aplicar labels
+
+            Con `gh issue edit ${{ github.event.issue.number }} --add-label "..."` aplica:
+            - Exactamente un label de tipo: bug, enhancement, documentation, o question.
+            - Como máximo un label de área: area:game-logic, area:render, area:ui, o area:input (omítelo si no aplica claramente).
+            - Exactamente un label de prioridad: priority:high, priority:medium, o priority:low.
+            - needs-info si el reporte no tiene información suficiente para diagnosticar (además de los anteriores).
+            No quites labels que ya estén puestos por una persona.
+
+            ## 4. Publicar el diagnóstico como comentario "sticky"
+
+            Busca si ya existe un comentario tuyo anterior con el marcador `<!-- claude-triage -->` como primera línea:
+            `gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments --jq '.[] | select(.body | startswith("<!-- claude-triage -->")) | .id'`
+
+            Si existe un id, actualiza ESE comentario con `gh api --method PATCH repos/${{ github.repository }}/issues/comments/<id> -f body=@archivo.md` (no crees uno nuevo). Si no existe, créalo con `gh issue comment ${{ github.event.issue.number }} --body-file archivo.md`.
+
+            El comentario debe reescribirse por completo cada vez (no anexar), reflejando el estado actual del Issue, con esta estructura exacta después del marcador:
+
+            ```
+            <!-- claude-triage -->
+            ## Diagnóstico automático
+
+            <resumen de 1-2 frases de qué pide el Issue>
+
+            ### Clasificación
+            - Tipo: ...
+            - Área: ...
+            - Prioridad: ...
+            - Razón: ...
+
+            ### Causa probable / punto de intervención
+            <funciones y constantes concretas de game.js con referencias archivo:línea>
+
+            ### Archivos a modificar
+            <lista corta>
+
+            ### Criterios de aceptación
+            <viñetas verificables>
+
+            ### Riesgos / efectos colaterales
+            <ej. si toca COLS/ROWS/BLOCK, recordar actualizar width/height del canvas #board en index.html>
+
+            ### Información faltante
+            <preguntas concretas, solo si aplica; omite esta sección si no falta nada>
+            ```
+
+            Si el Issue no es accionable tal cual está, dilo explícitamente en el diagnóstico y aplica el label needs-info en vez de inventar una causa.
