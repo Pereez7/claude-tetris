@@ -51,7 +51,7 @@ jobs:
 
             Este repo es un Tetris clásico en JavaScript vanilla (HTML5 Canvas + CSS, sin dependencias, sin build). Lee primero CLAUDE.md para entender la arquitectura completa. Toda la lógica del juego vive en game.js (~300 líneas, un solo script sin módulos): tablero (board), piezas (PIECES, rotateCW), colisiones (collide), wall kicks (tryRotate, offsets [0, -1, 1, -2, 2]), loop de juego (loop, dropAccum, dropInterval), limpieza de líneas (clearLines), scoring (LINE_SCORES), nivel (level), ghost piece (ghostY). index.html define el DOM y el canvas #board (300×600, 10×20 celdas de BLOCK=30px). style.css es el tema visual.
 
-            Tu tarea tiene dos partes. NO modifiques código, NO abras Pull Requests: tu único output son labels aplicados y un comentario de diagnóstico.
+            Tu tarea tiene dos partes. NO modifiques código, NO abras Pull Requests: tu único output son labels aplicados y un comentario de diagnóstico. Todo lo que comentes debe estar en formato Markdown válido que GitHub pueda renderizar correctamente.
 
             ## 1. Leer el Issue
 
