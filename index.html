@@ -33,6 +33,11 @@
         </div>
 
         <div class="panel-section">
+          <span class="label">COMBO</span>
+          <span class="value" id="combo">0</span>
+        </div>
+
+        <div class="panel-section">
           <span class="label">NEXT</span>
           <canvas id="next-canvas" width="120" height="280"></canvas>
         </div>
@@ -54,6 +59,24 @@
       <div class="overlay-box">
         <p id="overlay-title">GAME OVER</p>
         <p id="overlay-score"></p>
+
+        <div id="name-entry" class="hidden">
+          <input type="text" id="name-input" maxlength="12" placeholder="Tu nombre" />
+          <button id="save-record-btn">Guardar</button>
+        </div>
+
+        <div id="records-panel">
+          <div class="records-stats">
+            <span>Mejor combo: <strong id="best-combo">0</strong></span>
+            <span>Líneas máx.: <strong id="max-lines-cleared">0</strong></span>
+          </div>
+          <table id="records-table">
+            <tbody id="records-tbody"></tbody>
+          </table>
+          <button id="reset-records-btn">Resetear records</button>
+        </div>
+
+        <button id="start-btn" class="hidden">JUGAR</button>
         <button id="restart-btn">Reiniciar</button>
       </div>
     </div>
