@@ -398,7 +398,7 @@ function init() {
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'Escape') {
+  if (e.code === 'Escape' || e.code === 'KeyP') {
     if (gameOver) return;
     e.preventDefault();
     if (paused && !pauseControlsView.classList.contains('hidden')) {
@@ -408,7 +408,6 @@ document.addEventListener('keydown', e => {
     }
     return;
   }
-  if (e.code === 'KeyP') { togglePause(); return; }
   if (paused && !gameOver) {
     if (e.code === 'ArrowDown' || e.code === 'ArrowUp') {
       e.preventDefault();

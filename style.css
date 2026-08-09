@@ -221,6 +221,10 @@ kbd {
   align-items: center;
 }
 
+.overlay-box.hidden {
+  display: none;
+}
+
 #overlay-title {
   font-size: 28px;
   font-weight: 800;
