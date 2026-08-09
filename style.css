@@ -120,6 +120,38 @@ body {
   transform: translateX(20px);
 }
 
+/* ---- Skin select ---- */
+.skin-select {
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* ---- Skin: neon ---- */
+body.skin-neon #board,
+body.skin-neon #next-canvas {
+  background: #05050a;
+  border-color: #00e5ff;
+  box-shadow: 0 0 25px rgba(0, 229, 255, 0.45), 0 0 50px rgba(0, 229, 255, 0.2);
+}
+
+/* ---- Skin: pastel ---- */
+body.skin-pastel #board,
+body.skin-pastel #next-canvas {
+  border-radius: 16px;
+}
+
+/* ---- Skin: pixel ---- */
+body.skin-pixel #board,
+body.skin-pixel #next-canvas {
+  image-rendering: pixelated;
+}
+
 .game-container {
   display: flex;
   gap: 20px;
