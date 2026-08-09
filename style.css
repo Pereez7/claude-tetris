@@ -197,6 +197,63 @@ kbd {
   color: var(--kbd-color);
 }
 
+/* ---- Records ---- */
+.records-section ol {
+  list-style: decimal inside;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.records-section li,
+#overlay-records li {
+  font-size: 11px;
+  font-family: 'Courier New', Courier, monospace;
+  color: var(--controls-color);
+}
+
+.records-section li.no-records,
+#overlay-records li.no-records {
+  list-style: none;
+  font-family: inherit;
+}
+
+.records-section li.highlight,
+#overlay-records li.highlight {
+  color: var(--value-color);
+  font-weight: 700;
+}
+
+.records-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--controls-color);
+}
+
+.records-stats b {
+  color: var(--value-color);
+}
+
+#reset-records-btn {
+  background: transparent;
+  color: var(--controls-color);
+  border: 1px solid var(--kbd-border);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 10px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  align-self: flex-start;
+  transition: background 0.15s, color 0.15s;
+}
+
+#reset-records-btn:hover {
+  background: var(--kbd-bg);
+  color: var(--text);
+}
+
 /* ---- Overlay ---- */
 .overlay {
   position: absolute;
@@ -233,6 +290,54 @@ kbd {
   font-family: 'Courier New', Courier, monospace;
   font-size: 14px;
   color: var(--value-color);
+}
+
+#gameover-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.new-record-label {
+  font-size: 12px;
+  color: var(--overlay-title);
+  font-weight: 700;
+}
+
+#player-name {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--kbd-border);
+  background: var(--kbd-bg);
+  color: var(--text);
+  text-align: center;
+}
+
+#save-score-btn {
+  background: var(--restart-bg);
+  color: var(--restart-text);
+  border: none;
+  border-radius: 6px;
+  padding: 6px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+
+#save-score-btn:hover {
+  background: var(--restart-hover);
+}
+
+#overlay-records {
+  list-style: decimal inside;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 200px;
 }
 
 #restart-btn {
