@@ -164,6 +164,22 @@ body {
   letter-spacing: 1px;
 }
 
+/* ---- Selector de skin ---- */
+.skin-select {
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
+  color: var(--text);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.skin-select:focus {
+  outline: 1px solid var(--value-color);
+}
+
 #next-canvas {
   display: block;
   border: 1px solid var(--board-border);
