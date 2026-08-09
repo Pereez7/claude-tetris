@@ -13,6 +13,7 @@ const COLORS = [
   '#e57373', // Z - red
   '#90caf9', // J - pale blue
   '#ffb74d', // L - orange
+  '#b0bec5', // N - tuerca (steel)
 ];
 
 const PIECES = [
@@ -24,9 +25,14 @@ const PIECES = [
   [[5,5,0],[0,5,5],[0,0,0]],                  // Z
   [[6,0,0],[6,6,6],[0,0,0]],                  // J
   [[0,0,7],[7,7,7],[0,0,0]],                  // L
+  [[8,8,8],[8,0,8],[8,8,8]],                  // N - tuerca
 ];
 
 const LINE_SCORES = [0, 100, 300, 500, 800];
+
+const HOLE = -1; // celda de hueco de tuerca: transparente en colisión, cuenta llena al limpiar líneas
+const NUT = 8;
+const PIECE_HOLES = { [NUT]: [[1, 1]] }; // tipo → lista de [fila, col] hueco dentro de la matriz de la pieza
 
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
@@ -60,7 +66,7 @@ function createBoard() {
 }
 
 function randomPiece() {
-  const type = Math.floor(Math.random() * 7) + 1;
+  const type = Math.floor(Math.random() * 8) + 1;
   const shape = PIECES[type].map(row => [...row]);
   return { type, shape, x: Math.floor(COLS / 2) - Math.floor(shape[0].length / 2), y: 0 };
 }
@@ -72,7 +78,7 @@ function collide(shape, ox, oy) {
       const nx = ox + c;
       const ny = oy + r;
       if (nx < 0 || nx >= COLS || ny >= ROWS) return true;
-      if (ny >= 0 && board[ny][nx]) return true;
+      if (ny >= 0 && board[ny][nx] > 0) return true;
     }
   }
   return false;
@@ -104,6 +110,10 @@ function merge() {
     for (let c = 0; c < current.shape[r].length; c++)
       if (current.shape[r][c])
         board[current.y + r][current.x + c] = current.shape[r][c];
+  for (const [hr, hc] of PIECE_HOLES[current.type] ?? []) {
+    const y = current.y + hr, x = current.x + hc;
+    if (y >= 0 && y < ROWS && x >= 0 && x < COLS && board[y][x] === 0) board[y][x] = HOLE;
+  }
 }
 
 function clearLines() {
@@ -171,6 +181,7 @@ function updateHUD() {
 }
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
+  if (colorIndex === HOLE) { drawHole(context, x, y, size, alpha); return; }
   if (!colorIndex) return;
   const color = COLORS[colorIndex];
   context.globalAlpha = alpha ?? 1;
@@ -180,6 +191,21 @@ function drawBlock(context, x, y, colorIndex, size, alpha) {
   context.fillStyle = 'rgba(255,255,255,0.12)';
   context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
   context.globalAlpha = 1;
+}
+
+function drawHole(context, x, y, size, alpha) {
+  context.globalAlpha = alpha ?? 1;
+  context.strokeStyle = COLORS[NUT];
+  context.lineWidth = 3;
+  context.beginPath();
+  context.arc(x * size + size / 2, y * size + size / 2, size * 0.32, 0, Math.PI * 2);
+  context.stroke();
+  context.globalAlpha = 1;
+}
+
+function drawPieceHoles(context, type, ox, oy, size, alpha) {
+  for (const [hr, hc] of PIECE_HOLES[type] ?? [])
+    drawHole(context, ox + hc, oy + hr, size, alpha);
 }
 
 function drawGrid() {
@@ -215,11 +241,13 @@ function draw() {
       for (let c = 0; c < current.shape[r].length; c++)
         if (current.shape[r][c])
           drawBlock(ctx, current.x + c, gy + r, current.shape[r][c], BLOCK, 0.2);
+    drawPieceHoles(ctx, current.type, current.x, gy, BLOCK, 0.2);
 
     // current piece
     for (let r = 0; r < current.shape.length; r++)
       for (let c = 0; c < current.shape[r].length; c++)
         drawBlock(ctx, current.x + c, current.y + r, current.shape[r][c], BLOCK);
+    drawPieceHoles(ctx, current.type, current.x, current.y, BLOCK);
   }
 }
 
@@ -232,6 +260,7 @@ function drawNext() {
   for (let r = 0; r < shape.length; r++)
     for (let c = 0; c < shape[r].length; c++)
       drawBlock(nextCtx, offX + c, offY + r, shape[r][c], NB);
+  drawPieceHoles(nextCtx, next.type, offX, offY, NB);
 }
 
 function endGame() {

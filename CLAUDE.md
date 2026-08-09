@@ -29,9 +29,10 @@ Three files, all logic in `game.js` (~300 lines, single script, no modules):
 - `game.js` — game state and loop, all in module-level `let` globals (`board`, `current`, `next`, `score`, `lines`, `level`, `paused`, `gameOver`, `dropAccum`, `dropInterval`, `animId`).
 
 Key mechanics in `game.js`:
-- **Board**: `ROWS × COLS` matrix, each cell `0` (empty) or piece color index `1-7`.
-- **Pieces**: square matrices in `PIECES`; `rotateCW` does transpose+reverse for rotation.
-- **Collision**: `collide(shape, ox, oy)` checks board bounds and filled cells.
+- **Board**: `ROWS × COLS` matrix, each cell `0` (empty), piece color index `1-8`, or `HOLE` (`-1`, the nut piece's center — see below).
+- **Pieces**: square matrices in `PIECES`; `rotateCW` does transpose+reverse for rotation. Piece `8` ("N", nut/tuerca) is a 3×3 ring — `PIECE_HOLES[8] = [[1,1]]` marks its center as a hole.
+- **Nut hole**: `HOLE = -1` is transparent to `collide()` (`board[ny][nx] > 0`) so other pieces can pass through it, but `clearLines()`'s `v !== 0` check still counts it as filled — it just can never be overwritten once locked. `merge()` writes `HOLE` into the board for cells listed in `PIECE_HOLES` (only if still empty). `drawBlock()`/`drawHole()`/`drawPieceHoles()` render it as a stroked circle instead of a filled block, for the locked board, the current piece, its ghost, and the `next` preview.
+- **Collision**: `collide(shape, ox, oy)` checks board bounds and filled cells (`> 0`; `HOLE` doesn't block).
 - **Wall kicks**: `tryRotate()` retries rotation at x-offsets `[0, -1, 1, -2, 2]` before giving up.
 - **Game loop**: `loop(ts)` via `requestAnimationFrame`, accumulates `dt` into `dropAccum`, advances piece when it exceeds `dropInterval`.
 - **Line clear**: `clearLines()` scans bottom-up, splices full rows, unshifts empty rows at top.
@@ -43,4 +44,4 @@ Flow: `init()` → `createBoard()` + `spawn()` → `requestAnimationFrame(loop)`
 
 ## Tuning constants
 
-Adjustable at the top of `game.js`: `COLS`, `ROWS`, `BLOCK`, `COLORS`, `LINE_SCORES`, `dropInterval`. If `COLS`/`ROWS`/`BLOCK` change, update the `#board` canvas `width`/`height` in `index.html` to match (`COLS×BLOCK` and `ROWS×BLOCK`).
+Adjustable at the top of `game.js`: `COLS`, `ROWS`, `BLOCK`, `COLORS`, `PIECES`, `PIECE_HOLES`, `LINE_SCORES`, `dropInterval`. If `COLS`/`ROWS`/`BLOCK` change, update the `#board` canvas `width`/`height` in `index.html` to match (`COLS×BLOCK` and `ROWS×BLOCK`).
