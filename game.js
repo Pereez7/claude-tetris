@@ -47,7 +47,7 @@ const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 const themeToggle = document.getElementById('theme-toggle');
 
-let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+let board, current, queue, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 let gridLineColor = '#22222e';
 
 function applyTheme(isLight) {
@@ -165,8 +165,8 @@ function lockPiece() {
 }
 
 function spawn() {
-  current = next;
-  next = randomPiece();
+  current = queue.shift();
+  queue.push(randomPiece());
   if (collide(current.shape, current.x, current.y)) {
     endGame();
     return;
@@ -178,6 +178,7 @@ function updateHUD() {
   scoreEl.textContent = score.toLocaleString();
   linesEl.textContent = lines;
   levelEl.textContent = level;
+  drawNext();
 }
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
@@ -251,16 +252,27 @@ function draw() {
   }
 }
 
-function drawNext() {
-  const NB = 30;
-  nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
-  const shape = next.shape;
-  const offX = Math.floor((4 - shape[0].length) / 2);
-  const offY = Math.floor((4 - shape.length) / 2);
+function drawPreviewPiece(context, piece, pxOffsetX, pxOffsetY, boxPx, size) {
+  const cells = boxPx / size;
+  const shape = piece.shape;
+  const offX = Math.floor((cells - shape[0].length) / 2);
+  const offY = Math.floor((cells - shape.length) / 2);
+  context.save();
+  context.translate(pxOffsetX, pxOffsetY);
   for (let r = 0; r < shape.length; r++)
     for (let c = 0; c < shape[r].length; c++)
-      drawBlock(nextCtx, offX + c, offY + r, shape[r][c], NB);
-  drawPieceHoles(nextCtx, next.type, offX, offY, NB);
+      drawBlock(context, offX + c, offY + r, shape[r][c], size);
+  drawPieceHoles(context, piece.type, offX, offY, size);
+  context.restore();
+}
+
+function drawNext() {
+  nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+  drawPreviewPiece(nextCtx, queue[0], 0, 0, 120, 30);
+  if (score > 0) {
+    drawPreviewPiece(nextCtx, queue[1], 20, 120, 80, 20);
+    drawPreviewPiece(nextCtx, queue[2], 20, 200, 80, 20);
+  }
 }
 
 function endGame() {
@@ -313,7 +325,7 @@ function init() {
   dropInterval = 1000;
   dropAccum = 0;
   lastTime = performance.now();
-  next = randomPiece();
+  queue = [randomPiece(), randomPiece(), randomPiece()];
   spawn();
   updateHUD();
   overlay.classList.add('hidden');
